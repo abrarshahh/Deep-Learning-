@@ -1,0 +1,62 @@
+import networkx as nx
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from torch_geometric.data import Data
+from torch_geometric.nn import GCNConv
+
+# Load data
+# Assuming you have loaded your CSV file into `edges` and `nodes` variables
+
+# Create a graph
+G = nx.Graph()
+G.add_edges_from(edges)
+
+# Convert graph to PyTorch Geometric Data object
+edge_index = torch.tensor(list(G.edges)).t().contiguous()
+x = torch.tensor(nodes)  # Assuming `nodes` contains node features
+data = Data(x=x, edge_index=edge_index)
+
+# Define GCN model
+class GCN(nn.Module):
+    def __init__(self):
+        super(GCN, self).__init__()
+        self.conv1 = GCNConv(num_node_features, hidden_dim)
+        self.conv2 = GCNConv(hidden_dim, num_classes)
+
+    def forward(self, data):
+        x, edge_index = data.x, data.edge_index
+        x = self.conv1(x, edge_index)
+        x = torch.relu(x)
+        x = self.conv2(x, edge_index)
+        return x
+
+# Initialize model
+model = GCN()
+
+# Define loss function and optimizer
+criterion = nn.CrossEntropyLoss()
+optimizer = optim.Adam(model.parameters(), lr=0.01)
+
+# Train model
+def train():
+    model.train()
+    optimizer.zero_grad()
+    out = model(data)
+    loss = criterion(out[train_idx], labels[train_idx])  # Assuming `labels` contains target labels
+    loss.backward()
+    optimizer.step()
+
+# Evaluate model
+def evaluate():
+    model.eval()
+    out = model(data)
+    pred = out.argmax(dim=1)
+    acc = pred[test_idx].eq(labels[test_idx]).sum().item() / test_idx.size(0)
+    return acc
+
+# Train and evaluate
+for epoch in range(num_epochs):
+    train()
+    acc = evaluate()
+    print(f'Epoch: {epoch}, Test Accuracy: {acc}')
