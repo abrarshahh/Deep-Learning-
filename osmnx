@@ -1,0 +1,110 @@
+#first code
+
+import osmnx as ox
+import networkx as nx
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import mean_squared_error
+
+# Step 1: Download map and extract drive network
+G = ox.graph_from_place('New York City, New York', network_type='drive')
+
+# Step 2: Data preprocessing and feature engineering
+# For simplicity, let's consider only distance between nodes as feature
+edges = ox.graph_to_gdfs(G, nodes=False)['geometry']
+X = np.array([edge.length for edge in edges]).reshape(-1, 1)  # Feature: edge length
+y = np.array([edge.get('length') for u, v, edge in G.edges(data=True)])  # Target: actual length
+
+# Step 3: Train-test split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Step 4: Model training
+model = RandomForestRegressor()
+model.fit(X_train, y_train)
+
+# Step 5: Validation and evaluation
+y_pred = model.predict(X_test)
+mse = mean_squared_error(y_test, y_pred)
+print("Mean Squared Error:", mse)
+
+# Step 6: Route optimization (example using trained model)
+start_node = (40.7128, -74.0060)  # Example start point (latitude, longitude)
+end_node = (40.7306, -73.9352)    # Example end point (latitude, longitude)
+
+# Convert start and end points to nearest nodes in the graph
+start_node = ox.distance.nearest_nodes(G, start_node[1], start_node[0])
+end_node = ox.distance.nearest_nodes(G, end_node[1], end_node[0])
+
+# Predict edge length between start and end nodes
+edge_length = model.predict(np.array([[ox.distance.euclidean_dist_vec(G.nodes[start_node]['y'], G.nodes[start_node]['x'], G.nodes[end_node]['y'], G.nodes[end_node]['x'])]]))[0]
+
+# Optimize route
+route = nx.shortest_path(G, source=start_node, target=end_node, weight='length')
+
+# Step 7: Deployment - Integrate into your application
+print("Optimized Route:", route)
+print("Predicted Route Length:", edge_length)
+
+
+#2nd code
+
+import osmnx as ox
+import networkx as nx
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import mean_squared_error
+import matplotlib.pyplot as plt
+
+# Step 1: Download map and extract drive network
+G = ox.graph_from_place('New York City, New York', network_type='drive')
+
+# Step 2: Data preprocessing and feature engineering
+# For simplicity, let's consider only distance between nodes as feature
+edges = ox.graph_to_gdfs(G, nodes=False)['geometry']
+X = np.array([edge.length for edge in edges]).reshape(-1, 1)  # Feature: edge length
+y = np.array([edge.get('length') for u, v, edge in G.edges(data=True)])  # Target: actual length
+
+# Step 3: Train-test split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Step 4: Model training
+model = RandomForestRegressor()
+model.fit(X_train, y_train)
+
+# Step 5: Validation and evaluation
+y_pred = model.predict(X_test)
+mse = mean_squared_error(y_test, y_pred)
+print("Mean Squared Error:", mse)
+
+# Step 6: Route optimization (example using trained model)
+start_node = (40.7128, -74.0060)  # Example start point (latitude, longitude)
+end_node = (40.7306, -73.9352)    # Example end point (latitude, longitude)
+
+# Convert start and end points to nearest nodes in the graph
+start_node = ox.distance.nearest_nodes(G, start_node[1], start_node[0])
+end_node = ox.distance.nearest_nodes(G, end_node[1], end_node[0])
+
+# Predict edge length between start and end nodes
+edge_length = model.predict(np.array([[ox.distance.euclidean_dist_vec(G.nodes[start_node]['y'], G.nodes[start_node]['x'], G.nodes[end_node]['y'], G.nodes[end_node]['x'])]]))[0]
+
+# Optimize route
+route = nx.shortest_path(G, source=start_node, target=end_node, weight='length')
+
+# Step 7: Visualization
+# Plot the graph
+fig, ax = ox.plot_graph(G, show=False, close=False)
+
+# Highlight the optimized route
+ox.plot_graph_route(G, route, route_linewidth=6, route_color='r', fig=fig, ax=ax, route_alpha=0.5)
+
+# Annotate start and end points
+ax.scatter(G.nodes[start_node]['x'], G.nodes[start_node]['y'], c='g', s=100, zorder=3)
+ax.scatter(G.nodes[end_node]['x'], G.nodes[end_node]['y'], c='r', s=100, zorder=3)
+
+# Add edge length prediction as text
+ax.text(0.5, 0.5, f'Predicted Route Length: {edge_length:.2f} meters', transform=ax.transAxes, fontsize=12, ha='center')
+
+plt.show()
+
