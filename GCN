@@ -1,0 +1,57 @@
+import torch
+import torch.nn as nn
+import torch.optim as optim
+import torch.nn.functional as F
+from torch_geometric.nn import GCNConv
+from torch_geometric.data import Data
+
+# Example logistics graph with 5 nodes and 6 edges
+edge_index = torch.tensor([[0, 0, 1, 1, 2, 3, 3, 4],
+                           [1, 2, 0, 3, 1, 1, 4, 3]], dtype=torch.long)
+x = torch.tensor([[5.0], [4.0], [3.0], [2.0], [1.0]], dtype=torch.float)  # Node features
+y = torch.tensor([0, 1, 0, 1, 0], dtype=torch.long)  # Node labels
+
+data = Data(x=x, edge_index=edge_index, y=y)
+
+# Define a Graph Convolutional Network (GCN) model
+class GCN(nn.Module):
+    def __init__(self):
+        super(GCN, self).__init__()
+        self.conv1 = GCNConv(1, 16)
+        self.conv2 = GCNConv(16, 2)  # Output dimension is 2 for binary classification
+
+    def forward(self, data):
+        x, edge_index = data.x, data.edge_index
+        x = self.conv1(x, edge_index)
+        x = F.relu(x)
+        x = F.dropout(x, training=self.training)
+        x = self.conv2(x, edge_index)
+        return F.log_softmax(x, dim=1)
+
+# Instantiate the GCN model
+model = GCN()
+
+# Define loss function and optimizer
+criterion = nn.CrossEntropyLoss()
+optimizer = optim.Adam(model.parameters(), lr=0.01)
+
+# Training loop
+def train(epoch):
+    model.train()
+    optimizer.zero_grad()
+    output = model(data)
+    loss = criterion(output, data.y)
+    loss.backward()
+    optimizer.step()
+    print('Epoch: {}, Loss: {:.4f}'.format(epoch, loss.item()))
+
+# Run training for 100 epochs
+for epoch in range(1, 101):
+    train(epoch)
+
+# Inference: Use the trained model for logistics optimization
+model.eval()
+with torch.no_grad():
+    output = model(data)
+    pred = output.argmax(dim=1)
+    print("Predicted labels:", pred)
