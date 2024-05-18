@@ -1,0 +1,57 @@
+import numpy as np
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Conv1D, MaxPooling1D, Flatten, Dense, Dropout
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.utils import to_categorical
+
+# Load the dataset
+# Assuming the dataset is in a CSV format with features and labels
+data = pd.read_csv('path_to_ecg_data.csv')
+X = data.iloc[:, :-1].values  # features
+y = data.iloc[:, -1].values  # labels
+
+# Normalize the data
+X = X / np.max(X)
+
+# One-hot encode the labels if they are categorical
+y = to_categorical(y)
+
+# Split the data
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=0.2, random_state=42)
+
+# Reshape the data for Conv1D input (samples, time steps, features)
+X_train = X_train.reshape((X_train.shape[0], X_train.shape[1], 1))
+X_val = X_val.reshape((X_val.shape[0], X_val.shape[1], 1))
+X_test = X_test.reshape((X_test.shape[0], X_test.shape[1], 1))
+
+# Define the CNN model
+model = Sequential([
+    Conv1D(filters=32, kernel_size=3, activation='relu', input_shape=(X_train.shape[1], 1)),
+    MaxPooling1D(pool_size=2),
+    Dropout(0.5),
+    Conv1D(filters=64, kernel_size=3, activation='relu'),
+    MaxPooling1D(pool_size=2),
+    Dropout(0.5),
+    Flatten(),
+    Dense(128, activation='relu'),
+    Dropout(0.5),
+    Dense(y_train.shape[1], activation='softmax')
+])
+
+# Compile the model
+model.compile(optimizer=Adam(), loss='categorical_crossentropy', metrics=['accuracy'])
+
+# Train the model
+history = model.fit(X_train, y_train, epochs=20, batch_size=32, validation_data=(X_val, y_val))
+
+# Evaluate the model
+loss, accuracy = model.evaluate(X_test, y_test)
+print(f'Test Accuracy: {accuracy*100:.2f}%')
+
+# Predict on new data
+# Assuming new_ecg_data is preprocessed similarly to the training data
+# new_ecg_data = ...
+# predictions = model.predict(new_ecg_data)
