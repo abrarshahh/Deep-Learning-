@@ -1,0 +1,90 @@
+When you experience issues with Putty freezing while starting Hadoop daemons on your EC2 instance, it typically indicates resource constraints or configuration problems. Here’s a step-by-step guide to help you troubleshoot and resolve the issue:
+
+### Step-by-Step Troubleshooting and Fixes
+
+1. **Verify EC2 Instance Resources**:
+   - Ensure your EC2 instance has sufficient memory and CPU resources. Hadoop requires a decent amount of resources, especially for Namenode and Datanode. For a basic setup, a t2.medium or larger instance is recommended.
+   - Check your instance type and consider upgrading if necessary.
+
+2. **Check for System Resource Utilization**:
+   - Connect to your EC2 instance using Putty and run the following commands to check CPU and memory usage:
+     ```bash
+     top
+     free -m
+     ```
+   - Look for any processes consuming excessive resources. If your system is running out of memory or CPU, it could cause freezing.
+
+3. **Increase Java Heap Size**:
+   - Hadoop daemons rely heavily on Java, and insufficient heap size can lead to freezing. Increase the heap size for Namenode and Datanode by editing the Hadoop environment configuration file (`hadoop-env.sh`).
+     ```bash
+     sudo nano /usr/local/hadoop/etc/hadoop/hadoop-env.sh
+     ```
+   - Add or update the following lines:
+     ```bash
+     export HADOOP_NAMENODE_OPTS="-Xmx2g -Dcom.sun.management.jmxremote $HADOOP_NAMENODE_OPTS"
+     export HADOOP_DATANODE_OPTS="-Xmx2g -Dcom.sun.management.jmxremote $HADOOP_DATANODE_OPTS"
+     ```
+
+4. **Configure Proper DNS Resolution**:
+   - Ensure that your EC2 instance can resolve its own hostname. Edit `/etc/hosts` to include your hostname and IP address.
+     ```bash
+     sudo nano /etc/hosts
+     ```
+   - Add the following line:
+     ```bash
+     <private-ip-address>   <hostname>
+     ```
+   - Replace `<private-ip-address>` with your instance's private IP and `<hostname>` with your instance's hostname.
+
+5. **Check and Configure Firewall Settings**:
+   - Ensure that your security groups and network ACLs allow traffic on the necessary Hadoop ports (default HDFS port 50070 for Namenode, 50075 for Datanode).
+   - Update the security group associated with your EC2 instance to allow inbound traffic on these ports.
+
+6. **Verify Java Installation**:
+   - Ensure you have the correct version of Java installed and that it is properly configured in your environment.
+     ```bash
+     java -version
+     ```
+   - Hadoop typically requires Java 8.
+
+7. **Start Hadoop Daemons in the Background**:
+   - Starting Hadoop daemons in the background can prevent Putty from freezing. Use the `nohup` command:
+     ```bash
+     nohup hdfs namenode &
+     nohup hdfs datanode &
+     nohup yarn resourcemanager &
+     nohup yarn nodemanager &
+     ```
+   - This will run the commands in the background and prevent Putty from freezing.
+
+8. **Check Hadoop Logs for Errors**:
+   - Hadoop logs provide valuable information about what might be going wrong. Check the log files located in the Hadoop logs directory:
+     ```bash
+     cd /usr/local/hadoop/logs
+     tail -f hadoop-<username>-namenode-<hostname>.log
+     tail -f hadoop-<username>-datanode-<hostname>.log
+     ```
+   - Look for any errors or warnings that could indicate configuration issues or resource constraints.
+
+### Accessing HDFS via Browser
+
+- Ensure you are trying to access the correct URL. The default port for Namenode is `50070`.
+  ```plaintext
+  http://<ec2-instance-public-ip>:50070
+  ```
+
+### Example Configuration
+If your EC2 instance's public IP is `34.201.123.456`, you should access HDFS Namenode at:
+```plaintext
+http://34.201.123.456:50070
+```
+
+### Summary
+- Verify and upgrade EC2 instance resources if necessary.
+- Check and manage system resource utilization.
+- Adjust Java heap size in `hadoop-env.sh`.
+- Ensure correct DNS resolution and firewall settings.
+- Start Hadoop daemons using `nohup` to prevent Putty from freezing.
+- Review Hadoop logs for any error messages.
+
+By following these steps, you should be able to resolve the issue of Putty freezing and access your Hadoop ecosystem on your EC2 instance.
