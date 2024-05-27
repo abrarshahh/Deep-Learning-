@@ -1,0 +1,223 @@
+Creating a Hadoop WordCount program in Eclipse involves several steps, including setting up your project, writing the code, and running the job with pre-written input and key files. Below is a step-by-step guide to help you through the process.
+
+### Step-by-Step Guide
+
+#### 1. Setup Eclipse and Hadoop Libraries
+
+1. **Install Eclipse**: Make sure you have Eclipse IDE installed. You can download it from the [Eclipse website](https://www.eclipse.org/downloads/).
+
+2. **Install Hadoop**: Ensure Hadoop is installed and configured on your machine.
+
+3. **Create a New Java Project**:
+   - Open Eclipse.
+   - Go to `File > New > Java Project`.
+   - Name your project (e.g., `HadoopWordCount`).
+
+4. **Add Hadoop Libraries**:
+   - Right-click on your project in the Project Explorer and select `Build Path > Configure Build Path`.
+   - Go to the `Libraries` tab and click `Add External JARs`.
+   - Add the Hadoop core JARs (`hadoop-common`, `hadoop-mapreduce-client-core`, etc.) from your Hadoop installation directory (`$HADOOP_HOME/share/hadoop`).
+
+#### 2. Create the WordCount Program
+
+1. **Create a New Class**:
+   - Right-click on the `src` folder in your project and select `New > Class`.
+   - Name your class `WordCount`.
+
+2. **Write the Code**:
+   - Copy and paste the WordCount code provided earlier into your `WordCount.java` file:
+
+```java
+import java.io.IOException;
+import java.util.StringTokenizer;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+
+public class WordCount {
+
+    public static class TokenizerMapper extends Mapper<Object, Text, Text, IntWritable> {
+
+        private final static IntWritable one = new IntWritable(1);
+        private Text word = new Text();
+
+        public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
+            StringTokenizer itr = new StringTokenizer(value.toString());
+            while (itr.hasMoreTokens()) {
+                word.set(itr.nextToken());
+                context.write(word, one);
+            }
+        }
+    }
+
+    public static class IntSumReducer extends Reducer<Text, IntWritable, Text, IntWritable> {
+        private IntWritable result = new IntWritable();
+
+        public void reduce(Text key, Iterable<IntWritable> values, Context context) throws IOException, InterruptedException {
+            int sum = 0;
+            for (IntWritable val : values) {
+                sum += val.get();
+            }
+            result.set(sum);
+            context.write(key, result);
+        }
+    }
+
+    public static void main(String[] args) throws Exception {
+        Configuration conf = new Configuration();
+        Job job = Job.getInstance(conf, "word count");
+        job.setJarByClass(WordCount.class);
+        job.setMapperClass(TokenizerMapper.class);
+        job.setCombinerClass(IntSumReducer.class);
+        job.setReducerClass(IntSumReducer.class);
+        job.setOutputKeyClass(Text.class);
+        job.setOutputValueClass(IntWritable.class);
+        FileInputFormat.addInputPath(job, new Path(args[0]));
+        FileOutputFormat.setOutputPath(job, new Path(args[1]));
+        System.exit(job.waitForCompletion(true) ? 0 : 1);
+    }
+}
+```
+
+#### 3. Prepare Input and Key Files
+
+1. **Create Input File**:
+   - Create a text file named `input.txt` with the content you want to process. Example content:
+     ```
+     Hello world
+     Hello Hadoop
+     ```
+
+2. **Create Key File**:
+   - Create a text file named `keys.txt` containing the keys (words) you want to count. Example content:
+     ```
+     Hello
+     Hadoop
+     ```
+
+3. **Place Files in HDFS**:
+   - Start your Hadoop cluster.
+   - Copy the `input.txt` and `keys.txt` files to the Hadoop Distributed File System (HDFS):
+
+```bash
+hadoop fs -mkdir /user/<your-username>/wordcount/input
+hadoop fs -put /path/to/input.txt /user/<your-username>/wordcount/input
+hadoop fs -put /path/to/keys.txt /user/<your-username>/wordcount/input
+```
+
+#### 4. Modify WordCount to Use Keys File
+
+Update your `WordCount` class to read keys from `keys.txt` and use them in the count. This involves changing the `TokenizerMapper` class to filter words based on the provided keys.
+
+```java
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.StringTokenizer;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+
+public class WordCount {
+
+    public static class TokenizerMapper extends Mapper<Object, Text, Text, IntWritable> {
+
+        private final static IntWritable one = new IntWritable(1);
+        private Text word = new Text();
+        private Set<String> keyWords = new HashSet<>();
+
+        @Override
+        protected void setup(Context context) throws IOException {
+            Configuration conf = context.getConfiguration();
+            Path path = new Path(conf.get("keysFilePath"));
+            FileSystem fs = FileSystem.get(conf);
+            BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(path)));
+            String line;
+            while ((line = br.readLine()) != null) {
+                keyWords.add(line.trim());
+            }
+            br.close();
+        }
+
+        public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
+            StringTokenizer itr = new StringTokenizer(value.toString());
+            while (itr.hasMoreTokens()) {
+                String token = itr.nextToken();
+                if (keyWords.contains(token)) {
+                    word.set(token);
+                    context.write(word, one);
+                }
+            }
+        }
+    }
+
+    public static class IntSumReducer extends Reducer<Text, IntWritable, Text, IntWritable> {
+        private IntWritable result = new IntWritable();
+
+        public void reduce(Text key, Iterable<IntWritable> values, Context context) throws IOException, InterruptedException {
+            int sum = 0;
+            for (IntWritable val : values) {
+                sum += val.get();
+            }
+            result.set(sum);
+            context.write(key, result);
+        }
+    }
+
+    public static void main(String[] args) throws Exception {
+        Configuration conf = new Configuration();
+        conf.set("keysFilePath", args[2]); // Pass the keys file path as the third argument
+        Job job = Job.getInstance(conf, "word count");
+        job.setJarByClass(WordCount.class);
+        job.setMapperClass(TokenizerMapper.class);
+        job.setCombinerClass(IntSumReducer.class);
+        job.setReducerClass(IntSumReducer.class);
+        job.setOutputKeyClass(Text.class);
+        job.setOutputValueClass(IntWritable.class);
+        FileInputFormat.addInputPath(job, new Path(args[0]));
+        FileOutputFormat.setOutputPath(job, new Path(args[1]));
+        System.exit(job.waitForCompletion(true) ? 0 : 1);
+    }
+}
+```
+
+#### 5. Run the Program in Hadoop
+
+1. **Export the Project as JAR**:
+   - Right-click the project, select `Export > Java > JAR file`.
+   - Follow the prompts to export the JAR file.
+
+2. **Submit the Hadoop Job**:
+   - Use the Hadoop command line to run the job, specifying the input path, output path, and the keys file path:
+
+```bash
+hadoop jar /path/to/wordcount.jar WordCount /user/<your-username>/wordcount/input/input.txt /user/<your-username>/wordcount/output /user/<your-username>/wordcount/input/keys.txt
+```
+
+Replace `/path/to/wordcount.jar` with the path to your JAR file and ensure the paths in HDFS are correct.
+
+3. **Check the Output**:
+   - After the job completes, view the results in the specified output directory in HDFS:
+
+```bash
+hadoop fs -cat /user/<your-username>/wordcount/output/part-r-00000
+```
+
+This will display the word counts for the specified keys.
