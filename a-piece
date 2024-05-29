@@ -1,0 +1,119 @@
+To create a WordCount program on AWS EMR using Python, where both the mapper and reducer are in one file, and the input and key files are stored in an S3 bucket, follow these steps:
+
+### Step-by-Step Guide
+
+#### 1. Setup AWS EMR and S3
+
+1. **Create an EMR Cluster**:
+   - Go to the AWS Management Console.
+   - Navigate to the EMR section and create a new cluster.
+   - Configure the cluster as needed and ensure it has the necessary permissions to access your S3 buckets.
+
+2. **Prepare S3 Bucket**:
+   - Upload your `input.txt` and `keys.txt` files to your S3 bucket.
+
+#### 2. Create the Combined Mapper and Reducer Script
+
+1. **Write the Combined Mapper and Reducer Script**:
+   - This script will handle both the mapping and reducing phases.
+   - It reads the keys from the S3 bucket and processes the input file accordingly.
+
+```python
+# wordcount.py
+
+import sys
+import boto3
+
+s3 = boto3.client('s3')
+
+# Replace these with your S3 bucket and key details
+BUCKET_NAME = 'your-bucket-name'
+KEY_FILE = 'path/to/keys.txt'
+
+def load_keys():
+    obj = s3.get_object(Bucket=BUCKET_NAME, Key=KEY_FILE)
+    key_content = obj['Body'].read().decode('utf-8')
+    keys = set(key_content.strip().split('\n'))
+    return keys
+
+def mapper(keys):
+    for line in sys.stdin:
+        line = line.strip()
+        words = line.split()
+        for word in words:
+            if word in keys:
+                print(f"{word}\t1")
+
+def reducer():
+    current_word = None
+    current_count = 0
+    word = None
+
+    for line in sys.stdin:
+        line = line.strip()
+        word, count = line.split('\t', 1)
+        try:
+            count = int(count)
+        except ValueError:
+            continue
+
+        if current_word == word:
+            current_count += count
+        else:
+            if current_word:
+                print(f"{current_word}\t{current_count}")
+            current_word = word
+            current_count = count
+
+    if current_word == word:
+        print(f"{current_word}\t{current_count}")
+
+if __name__ == "__main__":
+    keys = load_keys()
+    if len(sys.argv) > 1 and sys.argv[1] == 'mapper':
+        mapper(keys)
+    elif len(sys.argv) > 1 and sys.argv[1] == 'reducer':
+        reducer()
+```
+
+### 3. Prepare Your Files in S3
+
+Make sure your S3 bucket contains:
+- `input.txt`: Your input text file.
+- `keys.txt`: Your keys file containing words to count.
+
+### 4. Run the Hadoop Streaming Job on EMR
+
+Use the AWS CLI to submit the Hadoop streaming job to your EMR cluster. Ensure you have the AWS CLI installed and configured with the necessary permissions.
+
+```bash
+aws emr add-steps --cluster-id <your-cluster-id> --steps Type=STREAMING,Name="WordCount",ActionOnFailure=CONTINUE,Args=[
+  "-files","s3://your-bucket-name/wordcount.py,s3://your-bucket-name/keys.txt",
+  "-mapper","python3 wordcount.py mapper",
+  "-reducer","python3 wordcount.py reducer",
+  "-input","s3://your-bucket-name/path/to/input.txt",
+  "-output","s3://your-bucket-name/path/to/output"
+]
+```
+
+Replace `<your-cluster-id>`, `your-bucket-name`, and the paths with your specific details.
+
+### 5. Check the Output
+
+After the job completes, the output will be stored in the specified S3 path. You can retrieve and view the results using the AWS CLI or AWS Management Console:
+
+```bash
+aws s3 cp s3://your-bucket-name/path/to/output/part-00000 - | less
+```
+
+This command downloads the output file and displays it using `less`.
+
+### Explanation
+
+- **wordcount.py**:
+  - **load_keys()**: Loads the keys from the S3 bucket.
+  - **mapper(keys)**: Processes the input data, emits words from the keys set with a count of 1.
+  - **reducer()**: Aggregates counts for each word and outputs the final count.
+  - Depending on the argument passed (`mapper` or `reducer`), it runs the appropriate function.
+
+By following these steps, you can run a WordCount program on AWS EMR with both mapper and reducer logic in one Python script, using input and key files stored in S3.
