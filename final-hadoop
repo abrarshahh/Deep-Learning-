@@ -1,0 +1,341 @@
+----CREATING CLUSTER----
+
+Setting up an Apache Hadoop cluster on AWS using Amazon EMR (Elastic MapReduce), S3, and EC2 involves several steps. Below is a detailed guide to get you started:
+
+### Prerequisites:
+1. **AWS Account:** Ensure you have an active AWS account.
+2. **IAM Role:** Create an IAM role with necessary permissions to interact with EMR, S3, and EC2.
+
+### Step 1: Create an S3 Bucket
+1. **Sign in to the AWS Management Console.**
+2. **Go to the S3 service.**
+3. **Create a new bucket:**
+   - Click on "Create bucket".
+   - Provide a unique name and select a region.
+   - Configure options as needed and complete the creation.
+
+### Step 2: Create an IAM Role for EMR
+1. **Go to the IAM service in the AWS Management Console.**
+2. **Create a role:**
+   - Choose "AWS service" as the trusted entity and select "EMR" as the service.
+   - Attach the "AmazonElasticMapReduceRole" policy.
+   - Follow through and complete the role creation.
+
+### Step 3: Launch an EMR Cluster
+1. **Go to the EMR service in the AWS Management Console.**
+2. **Create a cluster:**
+   - Click on "Create cluster".
+   - **Cluster name:** Provide a meaningful name.
+   - **Software configuration:** Choose the appropriate EMR release version and applications (e.g., Hadoop, Spark).
+   - **Hardware configuration:**
+     - **Instance type:** Choose the appropriate instance types for master and core nodes.
+     - **Number of instances:** Specify the number of instances for master and core nodes.
+   - **General cluster settings:**
+     - **EC2 key pair:** Choose an existing key pair or create a new one for SSH access.
+     - **IAM role:** Select the role you created earlier.
+   - **Security and access:**
+     - Configure cluster logging (recommended to store logs in the S3 bucket created earlier).
+     - Set up security groups to control access to the instances.
+   - **Bootstrap actions (optional):** Add any bootstrap actions if needed for pre-installation scripts.
+
+3. **Create cluster:** Review and create the cluster. The cluster will take some time to start.
+
+### Step 4: Interact with the Cluster
+1. **SSH into the master node:**
+   - Obtain the public DNS of the master node from the EMR cluster details.
+   - Use your key pair to SSH into the master node: 
+     ```sh
+     ssh -i /path/to/your-key.pem hadoop@<master-public-dns>
+     ```
+2. **Run Hadoop jobs:**
+   - Once logged in, you can interact with the Hadoop cluster using typical Hadoop commands.
+   - For example, to list HDFS files:
+     ```sh
+     hadoop fs -ls /
+     ```
+
+### Step 5: Store and Retrieve Data from S3
+1. **Upload data to S3:**
+   - Use the AWS Management Console or AWS CLI to upload data to your S3 bucket.
+2. **Access S3 data from EMR:**
+   - You can directly use S3 paths in your Hadoop jobs.
+   - For example, to copy data from S3 to HDFS:
+     ```sh
+     hadoop distcp s3://your-bucket/input-data /hdfs/path/
+     ```
+   - To output job results to S3:
+     ```sh
+     hadoop jar your-job.jar -input /hdfs/input-path -output s3://your-bucket/output-path
+     ```
+
+### Step 6: Monitor and Manage Your Cluster
+1. **Use the EMR console:** 
+   - Monitor cluster status, health, and metrics.
+2. **View logs:** 
+   - Logs can be found in the S3 bucket specified during the cluster creation for debugging and performance monitoring.
+3. **Scale the cluster:**
+   - You can modify the number of instances in the cluster by resizing the cluster through the EMR console.
+
+### Step 7: Terminate the Cluster
+1. **When your work is done, terminate the cluster** to avoid unnecessary charges:
+   - Go to the EMR console.
+   - Select the cluster and click "Terminate".
+
+By following these steps, you should be able to set up and run a Hadoop cluster on AWS using EMR, S3, and EC2 effectively. For more advanced configurations and optimizations, refer to the AWS EMR documentation.
+
+
+----MapReduce----
+To accomplish the tasks listed, you need to follow a structured approach. Below, you'll find a detailed guide for each step.
+
+### Step 1: Write a MapReduce Program in Python
+
+Assuming you're using Hadoop Streaming for running Python MapReduce jobs:
+
+**Mapper (mapper.py):**
+```python
+import sys
+
+# Load keywords from EnterKeyWords.txt
+keywords = set()
+with open('EnterKeyWords.txt', 'r') as f:
+    for line in f:
+        keywords.add(line.strip())
+
+# Read input from standard input
+for line in sys.stdin:
+    words = line.strip().split()
+    for word in words:
+        if word in keywords:
+            print(f"{word}\t1")
+```
+
+**Reducer (reducer.py):**
+```python
+import sys
+from collections import defaultdict
+
+# Dictionary to hold word counts
+word_count = defaultdict(int)
+
+# Read input from standard input
+for line in sys.stdin:
+    word, count = line.strip().split('\t')
+    word_count[word] += int(count)
+
+# Output the word counts
+for word, count in word_count.items():
+    print(f"{word}\t{count}")
+```
+
+### Step 2: Create Directories on the Cluster
+
+SSH into the EMR cluster's master node and create directories:
+```sh
+hadoop fs -mkdir /user/hadoop/Entr2010
+hadoop fs -mkdir /user/hadoop/Entr2020
+```
+
+### Step 3: Load Files into Directories
+
+Assuming you have local directories with the files for Entr2010 and Entr2020:
+
+```sh
+hadoop fs -put localpath/to/Entr2010/* /user/hadoop/Entr2010/
+hadoop fs -put localpath/to/Entr2020/* /user/hadoop/Entr2020/
+```
+
+### Step 4: Run the MapReduce Job Twice
+
+Upload your Python scripts to the cluster:
+```sh
+hadoop fs -put mapper.py /user/hadoop/
+hadoop fs -put reducer.py /user/hadoop/
+hadoop fs -put EnterKeyWords.txt /user/hadoop/
+```
+
+Run the MapReduce job for Entr2010:
+```sh
+hadoop jar /usr/lib/hadoop/hadoop-streaming.jar \
+  -input /user/hadoop/Entr2010/* \
+  -output /user/hadoop/output2010 \
+  -mapper /user/hadoop/mapper.py \
+  -reducer /user/hadoop/reducer.py \
+  -file /user/hadoop/mapper.py \
+  -file /user/hadoop/reducer.py \
+  -file /user/hadoop/EnterKeyWords.txt
+```
+
+Run the MapReduce job for Entr2020:
+```sh
+hadoop jar /usr/lib/hadoop/hadoop-streaming.jar \
+  -input /user/hadoop/Entr2020/* \
+  -output /user/hadoop/output2020 \
+  -mapper /user/hadoop/mapper.py \
+  -reducer /user/hadoop/reducer.py \
+  -file /user/hadoop/mapper.py \
+  -file /user/hadoop/reducer.py \
+  -file /user/hadoop/EnterKeyWords.txt
+```
+
+### Step 5: Observe and Compare Frequencies
+
+Retrieve the results:
+```sh
+hadoop fs -cat /user/hadoop/output2010/part-00000 > output2010.txt
+hadoop fs -cat /user/hadoop/output2020/part-00000 > output2020.txt
+```
+
+Compare the frequencies:
+```python
+# Load results from files
+frequencies_2010 = {}
+frequencies_2020 = {}
+
+with open('output2010.txt', 'r') as f:
+    for line in f:
+        word, count = line.strip().split('\t')
+        frequencies_2010[word] = int(count)
+
+with open('output2020.txt', 'r') as f:
+    for line in f:
+        word, count = line.strip().split('\t')
+        frequencies_2020[word] = int(count)
+
+# Compare frequencies
+for word in set(frequencies_2010.keys()).union(frequencies_2020.keys()):
+    count_2010 = frequencies_2010.get(word, 0)
+    count_2020 = frequencies_2020.get(word, 0)
+    print(f"{word}: 2010: {count_2010}, 2020: {count_2020}")
+```
+
+This script will print out the frequencies of each keyword from both 2010 and 2020, allowing you to observe and compare the differences. Adjust file paths and parameters as necessary based on your specific setup.
+
+
+----PigLatin----
+Sure! Here is a step-by-step guide to achieve all the tasks using Apache Pig on Hadoop.
+
+### Step 1: Upload Files to HDFS
+
+Assuming you have the `investors.txt` and `stockprices.txt` files locally, upload them to HDFS:
+
+```bash
+hdfs dfs -mkdir -p /user/hadoop/investors
+hdfs dfs -mkdir -p /user/hadoop/stockprices
+
+hdfs dfs -put investors.txt /user/hadoop/investors/
+hdfs dfs -put stockprices.txt /user/hadoop/stockprices/
+```
+
+### Step 2: Load the Files as Investors and StockPrices
+
+Start the Pig Grunt shell:
+
+```bash
+pig
+```
+
+Inside the Pig shell, load the files:
+
+```pig
+investors = LOAD '/user/hadoop/investors/investors.txt' USING PigStorage(',') AS (id:int, firstname:chararray, lastname:chararray, stocksymbol:chararray, shares:int);
+stockprices = LOAD '/user/hadoop/stockprices/stockprices.txt' USING PigStorage(',') AS (stocksymbol:chararray, price:float);
+```
+
+### Step 3: Display Both Files to Ensure They Are Loaded Correctly
+
+```pig
+DUMP investors;
+DUMP stockprices;
+```
+
+### Step 4: Join the Two Files by Stock Symbol
+
+```pig
+joined_data = JOIN investors BY stocksymbol, stockprices BY stocksymbol;
+```
+
+### Step 5: Display the Joined File
+
+```pig
+DUMP joined_data;
+```
+
+### Step 6: Group the Joined File by the "lastname" of the Investors
+
+```pig
+grouped_by_lastname = GROUP joined_data BY investors::lastname;
+```
+
+### Step 7: Calculate the Total Shares and Display the Results
+
+```pig
+total_shares = FOREACH grouped_by_lastname GENERATE group AS lastname, SUM(joined_data.investors::shares) AS total_shares;
+DUMP total_shares;
+```
+
+### Step 8: Calculate the Total Dollar Amount Invested by Each Investor
+
+First, we need to project the relevant columns from the joined data, then calculate the total investment:
+
+```pig
+projected_data = FOREACH joined_data GENERATE investors::lastname, investors::firstname, investors::id, investors::shares, stockprices::price, (investors::shares * stockprices::price) AS investment;
+grouped_by_investor = GROUP projected_data BY (lastname, firstname, id);
+total_investment = FOREACH grouped_by_investor GENERATE FLATTEN(group) AS (lastname, firstname, id), SUM(projected_data.investment) AS total_investment;
+DUMP total_investment;
+```
+
+### Step 9: Filter the Top Two Investors Who Have Invested the Most
+
+To get the top two investors, we can use the `ORDER` and `LIMIT` commands:
+
+```pig
+ordered_investments = ORDER total_investment BY total_investment DESC;
+top_two_investors = LIMIT ordered_investments 2;
+DUMP top_two_investors;
+```
+
+### Summary
+
+Here's the complete Pig script combining all the steps:
+
+```pig
+-- Step 1: Load the files
+investors = LOAD '/user/hadoop/investors/investors.txt' USING PigStorage(',') AS (id:int, firstname:chararray, lastname:chararray, stocksymbol:chararray, shares:int);
+stockprices = LOAD '/user/hadoop/stockprices/stockprices.txt' USING PigStorage(',') AS (stocksymbol:chararray, price:float);
+
+-- Step 2: Display the files
+DUMP investors;
+DUMP stockprices;
+
+-- Step 3: Join the files by stock symbol
+joined_data = JOIN investors BY stocksymbol, stockprices BY stocksymbol;
+DUMP joined_data;
+
+-- Step 4: Group the joined file by lastname
+grouped_by_lastname = GROUP joined_data BY investors::lastname;
+
+-- Step 5: Calculate the total shares
+total_shares = FOREACH grouped_by_lastname GENERATE group AS lastname, SUM(joined_data.investors::shares) AS total_shares;
+DUMP total_shares;
+
+-- Step 6: Calculate the total dollar amount invested by each investor
+projected_data = FOREACH joined_data GENERATE investors::lastname, investors::firstname, investors::id, investors::shares, stockprices::price, (investors::shares * stockprices::price) AS investment;
+grouped_by_investor = GROUP projected_data BY (lastname, firstname, id);
+total_investment = FOREACH grouped_by_investor GENERATE FLATTEN(group) AS (lastname, firstname, id), SUM(projected_data.investment) AS total_investment;
+DUMP total_investment;
+
+-- Step 7: Filter the top two investors who have invested the most
+ordered_investments = ORDER total_investment BY total_investment DESC;
+top_two_investors = LIMIT ordered_investments 2;
+DUMP top_two_investors;
+```
+
+### Running the Pig Script
+
+You can run this Pig script by saving it to a file (e.g., `investor_analysis.pig`) and executing it with Pig:
+
+```bash
+pig -x mapreduce investor_analysis.pig
+```
+
+Ensure that you have configured Hadoop and Pig properly on your cluster to run these commands. The script loads data from HDFS, processes it using Pig Latin commands, and displays the required outputs at each step.
