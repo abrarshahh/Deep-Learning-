@@ -1,0 +1,314 @@
+Sure, here is the complete project guide with all steps and code provided without changes:
+
+### Step 1: Import Necessary Libraries
+```python
+import os
+import re
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
+from tensorflow.keras.utils import to_categorical
+import tensorflow as tf
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from yolov5 import YOLOv5
+
+# Ensure TensorFlow and YOLOv5 are installed
+# !pip install tensorflow
+# !pip install yolov5
+```
+
+### Step 2: Load and Preprocess Data
+```python
+# Load data
+def load_data(path):
+    images, labels = [], []
+    for file in sorted(os.listdir(path)):
+        if file.endswith(".jpg") or file.endswith(".jpeg"):
+            img = cv2.cvtColor(cv2.resize(cv2.imread(os.path.join(path, file)), (128, 128)), cv2.COLOR_BGR2RGB)
+            images.append(img)
+            if "Hog Pulm" in file:
+                file = file.replace("Hog Pulm", "HogPlum")
+            elif "HogPulm" in file:
+                file = file.replace("HogPulm", "HogPlum")
+            elif "Lichi" in file:
+                file = file.replace("Lichi", "Litchi")
+            labels.append(re.findall("[a-zA-Z]+", file)[0])
+    return np.array(images), np.array(labels)
+
+train_path = r"Dataset/Train File"
+test_path = r"Dataset/Test File"
+
+train_images, train_labels = load_data(train_path)
+test_images, test_labels = load_data(test_path)
+
+# Encode labels
+le = LabelEncoder()
+train_labels_enc = le.fit_transform(train_labels)
+test_labels_enc = le.transform(test_labels)
+
+# One-hot encoding
+train_labels_enc = to_categorical(train_labels_enc, num_classes=10)
+test_labels_enc = to_categorical(test_labels_enc, num_classes=10)
+```
+
+### Step 3: Data Visualization
+```python
+def plot_images(images, labels, n=10):
+    plt.figure(figsize=(20, 10))
+    for i in range(n):
+        plt.subplot(2, n//2, i+1)
+        plt.imshow(images[i])
+        plt.title(labels[i])
+        plt.axis('off')
+    plt.show()
+
+plot_images(train_images, train_labels)
+```
+
+### Step 4: Data Augmentation
+```python
+datagen = ImageDataGenerator(
+    rotation_range=20,
+    width_shift_range=0.2,
+    height_shift_range=0.2,
+    shear_range=0.2,
+    zoom_range=0.2,
+    horizontal_flip=True,
+    fill_mode='nearest'
+)
+
+datagen.fit(train_images)
+```
+
+### Step 5: Build Custom Models
+#### Custom Model 1
+```python
+model1 = Sequential([
+    Conv2D(32, (3, 3), activation='relu', input_shape=(128, 128, 3)),
+    MaxPooling2D((2, 2)),
+    Conv2D(64, (3, 3), activation='relu'),
+    MaxPooling2D((2, 2)),
+    Conv2D(128, (3, 3), activation='relu'),
+    MaxPooling2D((2, 2)),
+    Flatten(),
+    Dense(128, activation='relu'),
+    Dropout(0.5),
+    Dense(10, activation='softmax')
+])
+
+model1.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+model1.summary()
+```
+
+#### Custom Model 2
+```python
+model2 = Sequential([
+    Conv2D(64, (3, 3), activation='relu', input_shape=(128, 128, 3)),
+    MaxPooling2D((2, 2)),
+    Conv2D(128, (3, 3), activation='relu'),
+    MaxPooling2D((2, 2)),
+    Conv2D(256, (3, 3), activation='relu'),
+    MaxPooling2D((2, 2)),
+    Flatten(),
+    Dense(256, activation='relu'),
+    Dropout(0.5),
+    Dense(10, activation='softmax')
+])
+
+model2.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+model2.summary()
+```
+
+### Step 6: Train Models
+#### Train Custom Model 1
+```python
+history1 = model1.fit(datagen.flow(train_images, train_labels_enc, batch_size=32),
+                      validation_data=(test_images, test_labels_enc),
+                      epochs=20)
+```
+
+#### Train Custom Model 2
+```python
+history2 = model2.fit(datagen.flow(train_images, train_labels_enc, batch_size=32),
+                      validation_data=(test_images, test_labels_enc),
+                      epochs=20)
+```
+
+### Step 7: Train YOLOv8 Model
+```python
+# Assuming you have a YOLOv8 model saved and configured for the fruits dataset
+yolov8 = YOLOv5("path/to/yolov8_weights.pt", device="cpu")
+
+# Evaluate YOLOv8 on the test set
+results = yolov8(test_images)
+```
+
+### Step 8: Evaluate Models
+#### Evaluate Custom Model 1
+```python
+model1.evaluate(test_images, test_labels_enc)
+```
+
+#### Evaluate Custom Model 2
+```python
+model2.evaluate(test_images, test_labels_enc)
+```
+
+#### Evaluate YOLOv8 Model
+```python
+# Display YOLOv8 results
+for result in results:
+    result.show()
+```
+
+### Step 9: Visualize Results
+```python
+# Plot training history for Custom Model 1
+plt.plot(history1.history['accuracy'], label='accuracy')
+plt.plot(history1.history['val_accuracy'], label = 'val_accuracy')
+plt.xlabel('Epoch')
+plt.ylabel('Accuracy')
+plt.ylim([0, 1])
+plt.legend(loc='lower right')
+plt.show()
+
+# Plot training history for Custom Model 2
+plt.plot(history2.history['accuracy'], label='accuracy')
+plt.plot(history2.history['val_accuracy'], label = 'val_accuracy')
+plt.xlabel('Epoch')
+plt.ylabel('Accuracy')
+plt.ylim([0, 1])
+plt.legend(loc='lower right')
+plt.show()
+```
+
+### Step 10: Test on New Images
+```python
+def test_on_new_images(model, images, labels):
+    predictions = model.predict(images)
+    for i in range(len(images)):
+        plt.imshow(images[i])
+        plt.title(f"Actual: {labels[i]}, Predicted: {le.inverse_transform(np.argmax(predictions[i]))}")
+        plt.axis('off')
+        plt.show()
+
+test_on_new_images(model1, test_images[:10], test_labels[:10])
+test_on_new_images(model2, test_images[:10], test_labels[:10])
+```
+
+### Step 11: Generate Predictions and Compare Models
+
+#### Generate Predictions for Custom Model 1
+```python
+custom_model1_predictions = model1.predict(test_images)
+custom_model1_predicted_labels = le.inverse_transform(np.argmax(custom_model1_predictions, axis=1))
+
+# Visualize predictions
+def visualize_predictions(images, true_labels, predicted_labels, n=10):
+    plt.figure(figsize=(20, 10))
+    for i in range(n):
+        plt.subplot(2, n//2, i+1)
+        plt.imshow(images[i])
+        plt.title(f"True: {true_labels[i]}\nPredicted: {predicted_labels[i]}")
+        plt.axis('off')
+    plt.show()
+
+visualize_predictions(test_images, test_labels, custom_model1_predicted_labels)
+```
+
+#### Generate Predictions for Custom Model 2
+```python
+custom_model2_predictions = model2.predict(test_images)
+custom_model2_predicted_labels = le.inverse_transform(np.argmax(custom_model2_predictions, axis=1))
+
+visualize_predictions(test_images, test_labels, custom_model2_predicted_labels)
+```
+
+#### Generate Predictions for YOLOv8 Model
+```python
+def yolo_predict(model, images):
+    results = model(images)
+    for result in results:
+        result.show()
+
+yolo_predict(yolov8, test_images[:10])
+```
+
+### Step 12: Evaluate and Compare Model Performance
+
+#### Custom Model 1 Performance Metrics
+```python
+custom_model1_loss, custom_model1_accuracy = model1.evaluate(test_images, test_labels_enc)
+print(f"Custom Model 1 - Loss: {custom_model1_loss}, Accuracy: {custom_model1_accuracy}")
+```
+
+#### Custom Model 2 Performance Metrics
+```python
+custom_model2_loss, custom_model2_accuracy = model2.evaluate(test_images, test_labels_enc)
+print(f"Custom Model 2 - Loss: {custom_model2_loss}, Accuracy: {custom_model2_accuracy}")
+```
+
+#### YOLOv8 Performance Metrics
+YOLOv8 models typically provide performance metrics like mAP (mean Average Precision). Assuming the results variable from YOLOv8 contains the evaluation metrics:
+
+```python
+print(f"YOLOv8 Model - mAP: {results.metrics['mAP']}, Precision: {results.metrics['precision']}, Recall: {results.metrics['recall']}")
+```
+
+### Step 13: Choose the Best Model
+Based on the performance metrics (accuracy for custom models and mAP for YOLOv8), determine the best performing model. 
+
+### Step 14: Final Testing with Sample Images
+Test the chosen model with sample images to demonstrate its performance.
+
+#### Custom Model Testing Function
+```python
+def test_with_sample
+
+_images(model, images, labels):
+    predictions = model.predict(images)
+    for i in range(len(images)):
+        plt.imshow(images[i])
+        plt.title(f"Actual: {labels[i]}, Predicted: {le.inverse_transform(np.argmax(predictions[i]))}")
+        plt.axis('off')
+        plt.show()
+
+# Test with sample images for Custom Model 1
+test_with_sample_images(model1, test_images[:10], test_labels[:10])
+
+# Test with sample images for Custom Model 2
+test_with_sample_images(model2, test_images[:10], test_labels[:10])
+```
+
+#### YOLOv8 Testing Function
+```python
+yolo_predict(yolov8, test_images[:10])
+```
+
+### Step 15: Save the Best Model
+Save the best performing model for future use.
+
+```python
+if custom_model1_accuracy > custom_model2_accuracy:
+    best_model = model1
+else:
+    best_model = model2
+
+best_model.save('best_model.h5')
+```
+
+For YOLOv8, saving and loading the model might differ. Ensure to follow the appropriate instructions for saving YOLO models.
+
+```python
+# Example for saving YOLOv8 model
+yolov8.save('best_yolov8_model.pt')
+```
+
+### Step 16: Conclusion and Reporting
+Summarize the findings, model performances, and your conclusions. You can create a detailed report with visualizations and metrics comparisons.
+
+This guide provides a comprehensive framework to complete your object detection project. Adjust the paths, parameters, and configurations based on your specific requirements and dataset structure. If you encounter any errors or need further adjustments, feel free to ask for help.
