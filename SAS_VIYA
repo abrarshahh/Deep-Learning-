@@ -1,0 +1,271 @@
+To create the Business Intelligence (BI) report in SAS Viya Learner v3.5 using the INSIGHT_TOY_DEMO dataset, follow these steps:
+
+### Step 1: Load the Dataset
+
+1. **Access SAS Viya Learner v3.5:**
+   - Open SAS Viya Learner v3.5 and log in to your account.
+
+2. **Load the Dataset:**
+   - Navigate to the Data tab.
+   - Click on the Import Data button.
+   - Browse for the INSIGHT_TOY_DEMO dataset and import it.
+
+### Step 2: Explore and Prepare the Data
+
+1. **Explore the Data:**
+   - Go to the Data Explorer tab.
+   - Select the INSIGHT_TOY_DEMO dataset.
+   - Explore the dataset to understand the variables and their values.
+
+2. **Data Preparation:**
+   - Clean the data if necessary (e.g., handling missing values, filtering irrelevant data).
+   - Create any necessary calculated columns, such as Facility Age or Gross Margin Ratio.
+
+### Step 3: Create Descriptive Analytics Objects
+
+1. **Tables:**
+   - Navigate to the Reports tab.
+   - Add a new report and insert a table.
+   - Select relevant columns, such as `Customer`, `Facility`, `Product`, and `Product Sale`.
+   - Use filters to drill down into specific regions or time periods.
+
+2. **Graphs:**
+   - Add a bar chart to visualize `Product Sale` by `Product Line` and `Product Brand`.
+   - Insert a line chart to show trends over time, using `Transaction Date` and `Product Sale`.
+
+3. **Controls:**
+   - Add a dropdown filter to allow users to filter data by `Facility Continent` or `Facility Country`.
+
+4. **Containers:**
+   - Use containers to organize related visualizations, such as placing all sales-related charts in one container.
+
+5. **Content Displays:**
+   - Include text boxes to provide context or explanations for your visualizations.
+   - Add images or logos to enhance the visual appeal of the report.
+
+### Step 4: Create Advanced Predictive Analytics Objects
+
+1. **Decision Tree:**
+   - Navigate to the Advanced Analytics tab.
+   - Select the Decision Tree option.
+   - Use `Customer Satisfaction` as the target variable and relevant predictors like `Product Price`, `Facility Efficiency`, and `Unit Reliability`.
+   - Add the decision tree to your report.
+
+2. **Forecasting:**
+   - Choose the Forecasting option from the Advanced Analytics tab.
+   - Use `Transaction Date` and `Product Sale` to create a sales forecast.
+   - Add the forecast chart to your report.
+
+### Step 5: Create BI Report Sections
+
+1. **Operations Section:**
+   - Add a section for Operations.
+   - Include key metrics like `Facility Efficiency`, `Unit Capacity`, and `Unit Discard Rate`.
+   - Use appropriate visualizations, such as bar charts and line graphs, to represent operational data.
+
+2. **Marketing Section:**
+   - Add a section for Marketing.
+   - Include metrics like `Product Sale`, `Customer Satisfaction`, and `Product Quality`.
+   - Use pie charts, bar charts, and trend lines to visualize marketing data.
+
+3. **Finance Section:**
+   - Add a section for Finance.
+   - Include metrics like `Gross Margin`, `Gross Margin Ratio`, and `Product Cost of Sale`.
+   - Use bar charts, tables, and line charts to represent financial data.
+
+### Step 6: Add Interactive Features
+
+1. **Global Filters:**
+   - Add global filters to the report to allow users to filter data across all sections. For example, add a global filter for `Transaction Year`.
+
+2. **Local Filters:**
+   - Add local filters within each section to enable more granular data exploration. For example, add a filter for `Product Line` in the marketing section.
+
+3. **Text Inputs and Content Displays:**
+   - Use text inputs to allow users to enter specific values or thresholds for analysis.
+   - Display dynamic text content based on user inputs or selected filters.
+
+### Step 7: Presentation and Storytelling
+
+1. **Choose Visualization Tools:**
+   - Use appropriate visualization tools based on the data type and the story you want to tell.
+   - Ensure that charts and graphs are easy to understand for non-technical users.
+
+2. **Context and Explanations:**
+   - Provide context and explanations for each visualization.
+   - Anticipate questions users may have and provide answers through your visualizations and text content.
+
+3. **Interactive Features:**
+   - Make use of interactive features like filters and text inputs to enhance user experience.
+   - Ensure that the report is flexible and allows for further exploration.
+
+### Final Steps: Save and Share the Report
+
+1. **Save the Report:**
+   - Save the report in SAS Viya Learner.
+   - Ensure that all visualizations and interactive features are working correctly.
+
+2. **Share the Report:**
+   - Share the report with the executive team and other stakeholders.
+   - Provide instructions on how to use the interactive features and filters.
+
+By following these steps, you will be able to create a comprehensive and interactive BI report in SAS Viya Learner v3.5 that meets the requirements of the business case.
+
+
+
+
+
+
+
+
+
+Creating comprehensive operations, marketing, and finance dashboards in SAS Viya Learner v3.5 involves using a variety of descriptive and advanced predictive analytics objects. Here is a detailed guide on how to create these dashboards, including specific graphs, tables, and the relevant columns to use:
+
+### Operations Dashboard
+
+#### 1. Facility Efficiency
+
+- **Bar Chart:**
+  - **Columns:** `Facility`, `Facility Efficiency`
+  - **Description:** Show the efficiency of each facility.
+  - **Steps:** Add a bar chart, select `Facility` for the X-axis and `Facility Efficiency` for the Y-axis. Use different colors for different facilities.
+
+- **Line Chart:**
+  - **Columns:** `Facility`, `Facility Efficiency`, `Transaction Date`
+  - **Description:** Track the efficiency of each facility over time.
+  - **Steps:** Add a line chart, use `Transaction Date` for the X-axis and `Facility Efficiency` for the Y-axis. Different lines for each facility.
+
+#### 2. Unit Performance
+
+- **Bar Chart:**
+  - **Columns:** `Unit`, `Unit Yield Rate`
+  - **Description:** Show the yield rate of each manufacturing unit.
+  - **Steps:** Add a bar chart, select `Unit` for the X-axis and `Unit Yield Rate` for the Y-axis.
+
+- **Scatter Plot:**
+  - **Columns:** `Unit Age`, `Unit Reliability`
+  - **Description:** Analyze the relationship between the age of units and their reliability.
+  - **Steps:** Add a scatter plot, use `Unit Age` for the X-axis and `Unit Reliability` for the Y-axis.
+
+#### 3. Production Capacity
+
+- **Table:**
+  - **Columns:** `Unit`, `Unit Capacity`, `Unit Actual`
+  - **Description:** Display the capacity and actual production of each unit.
+  - **Steps:** Add a table and select `Unit`, `Unit Capacity`, and `Unit Actual` columns.
+
+### Marketing Dashboard
+
+#### 1. Product Sales
+
+- **Line Chart:**
+  - **Columns:** `Transaction Date`, `Product Sale`
+  - **Description:** Show the trend of product sales over time.
+  - **Steps:** Add a line chart, select `Transaction Date` for the X-axis and `Product Sale` for the Y-axis.
+
+- **Bar Chart:**
+  - **Columns:** `Product Line`, `Product Sale`
+  - **Description:** Compare sales across different product lines.
+  - **Steps:** Add a bar chart, use `Product Line` for the X-axis and `Product Sale` for the Y-axis.
+
+#### 2. Customer Satisfaction
+
+- **Pie Chart:**
+  - **Columns:** `Customer Satisfaction`
+  - **Description:** Show the distribution of customer satisfaction levels.
+  - **Steps:** Add a pie chart, select `Customer Satisfaction` column.
+
+- **Heat Map:**
+  - **Columns:** `Facility Region`, `Customer Satisfaction`
+  - **Description:** Visualize customer satisfaction across different regions.
+  - **Steps:** Add a heat map, select `Facility Region` and `Customer Satisfaction` columns.
+
+#### 3. Product Quality
+
+- **Bar Chart:**
+  - **Columns:** `Product Line`, `Product Quality`
+  - **Description:** Compare product quality across different product lines.
+  - **Steps:** Add a bar chart, use `Product Line` for the X-axis and `Product Quality` for the Y-axis.
+
+- **Table:**
+  - **Columns:** `Product`, `Product Quality`, `Product Sale`
+  - **Description:** Display product quality along with sales for each product.
+  - **Steps:** Add a table and select `Product`, `Product Quality`, and `Product Sale` columns.
+
+### Finance Dashboard
+
+#### 1. Gross Margin
+
+- **Line Chart:**
+  - **Columns:** `Transaction Date`, `Gross Margin`
+  - **Description:** Show the trend of gross margin over time.
+  - **Steps:** Add a line chart, select `Transaction Date` for the X-axis and `Gross Margin` for the Y-axis.
+
+- **Bar Chart:**
+  - **Columns:** `Product Line`, `Gross Margin`
+  - **Description:** Compare gross margins across different product lines.
+  - **Steps:** Add a bar chart, use `Product Line` for the X-axis and `Gross Margin` for the Y-axis.
+
+#### 2. Cost of Sales
+
+- **Bar Chart:**
+  - **Columns:** `Product Line`, `Product Cost of Sale`
+  - **Description:** Compare costs of sales across different product lines.
+  - **Steps:** Add a bar chart, use `Product Line` for the X-axis and `Product Cost of Sale` for the Y-axis.
+
+- **Table:**
+  - **Columns:** `Product`, `Product Cost of Sale`, `Product Sale`
+  - **Description:** Display the cost of sales and actual sales for each product.
+  - **Steps:** Add a table and select `Product`, `Product Cost of Sale`, and `Product Sale` columns.
+
+#### 3. Profitability Analysis
+
+- **Scatter Plot:**
+  - **Columns:** `Product Sale`, `Gross Margin`
+  - **Description:** Analyze the relationship between sales and gross margin.
+  - **Steps:** Add a scatter plot, use `Product Sale` for the X-axis and `Gross Margin` for the Y-axis.
+
+- **Bar Chart:**
+  - **Columns:** `Facility`, `Gross Margin Ratio`
+  - **Description:** Compare the gross margin ratio across different facilities.
+  - **Steps:** Add a bar chart, use `Facility` for the X-axis and `Gross Margin Ratio` for the Y-axis.
+
+### Advanced Predictive Analytics
+
+#### Decision Tree
+
+- **Columns:** `Customer Satisfaction`, `Product Price`, `Facility Efficiency`, `Unit Reliability`
+- **Description:** Predict customer satisfaction based on various factors.
+- **Steps:** 
+  - Navigate to the Advanced Analytics tab.
+  - Select Decision Tree.
+  - Use `Customer Satisfaction` as the target variable and the other columns as predictors.
+  - Add the decision tree visualization to the relevant dashboard section.
+
+#### Forecasting
+
+- **Columns:** `Transaction Date`, `Product Sale`
+- **Description:** Forecast future product sales.
+- **Steps:**
+  - Navigate to the Advanced Analytics tab.
+  - Select Forecasting.
+  - Use `Transaction Date` for the X-axis and `Product Sale` for the Y-axis.
+  - Add the forecast chart to the finance dashboard.
+
+### Interactive Features
+
+1. **Global Filters:**
+   - **Columns:** `Transaction Year`, `Facility Continent`, `Product Line`
+   - **Description:** Allow users to filter data across all sections.
+   - **Steps:** Add global filters to the report and configure them to filter the relevant columns.
+
+2. **Local Filters:**
+   - **Columns:** `Product Line`, `Facility Region`
+   - **Description:** Enable more granular data exploration within each section.
+   - **Steps:** Add local filters within each section and configure them to filter the relevant columns.
+
+3. **Text Inputs and Content Displays:**
+   - **Description:** Allow users to enter specific values or display dynamic content.
+   - **Steps:** Use text input objects and content displays to enhance user interaction and provide additional context.
+
+By following these steps, you will create detailed and interactive dashboards for operations, marketing, and finance in SAS Viya Learner v3.5. Each dashboard will include relevant graphs, tables, and advanced analytics objects, ensuring a comprehensive view of the company's performance.
