@@ -1,0 +1,798 @@
+TASK 1
+
+Sure, I'll guide you through the process of performing exploratory data analysis (EDA), data preprocessing, machine learning model development, and evaluation in SAS Viya Learner. For each question, I'll provide two different approaches and include various graphs to illustrate the steps.
+
+### Q1. Exploratory Data Analysis (EDA)
+
+#### Approach 1: Using SAS Viya Visual Analytics
+
+1. **Load the Dataset:**
+   - Open SAS Viya and navigate to the SAS Viya Visual Analytics.
+   - Load the `HOUSEPRICE` dataset into the environment.
+
+2. **Descriptive Statistics:**
+   - Generate summary statistics for all variables using the "Summary Statistics" task.
+   - This will provide mean, median, standard deviation, and other descriptive measures.
+
+3. **Data Visualization:**
+   - Create histograms for continuous variables like `SalePrice`, `LotArea`, `GrLivArea`, etc.
+   - Use box plots to identify outliers.
+   - Scatter plots for pairs of variables, such as `GrLivArea` vs. `SalePrice`.
+
+4. **Correlation Analysis:**
+   - Calculate the correlation matrix for the numeric variables using the "Correlation" task.
+   - Visualize the correlations using a heatmap to assess multicollinearity.
+
+5. **Selected Attributes:**
+   - Based on the correlation matrix and scatter plots, identify attributes highly correlated with `SalePrice`. Commonly significant variables include `GrLivArea`, `OverallQual`, `GarageCars`, etc.
+
+#### Approach 2: Using SAS Viya Programming Interface
+
+1. **Load the Dataset:**
+   - Use PROC IMPORT to load the dataset.
+
+2. **Descriptive Statistics:**
+   - Use PROC MEANS to generate summary statistics.
+   ```sas
+   proc means data=HOUSEPRICE n mean median std min max;
+       var SalePrice LotArea GrLivArea OverallQual GarageCars;
+   run;
+   ```
+
+3. **Data Visualization:**
+   - Use PROC SGPLOT to create histograms and scatter plots.
+   ```sas
+   proc sgplot data=HOUSEPRICE;
+       histogram SalePrice;
+   run;
+
+   proc sgplot data=HOUSEPRICE;
+       scatter x=GrLivArea y=SalePrice;
+   run;
+   ```
+
+4. **Correlation Analysis:**
+   - Use PROC CORR to compute the correlation matrix.
+   ```sas
+   proc corr data=HOUSEPRICE;
+       var SalePrice LotArea GrLivArea OverallQual GarageCars;
+   run;
+   ```
+
+5. **Selected Attributes:**
+   - Analyze the output from PROC CORR to identify variables with high correlation with `SalePrice`.
+
+### Q2. Data Preprocessing
+
+#### Approach 1: Using SAS Viya Visual Data Preparation
+
+1. **Check for Duplicates:**
+   - Use the "Find Duplicates" transformation to identify duplicate records.
+   - Remove duplicates if any are found.
+
+2. **Format Consistency:**
+   - Use the "Standardize" transformation to ensure consistent formatting for categorical variables.
+   - Use the "Impute Missing Values" transformation to handle missing data appropriately.
+
+3. **Validation:**
+   - Use the "Profile Data" feature to validate the consistency and completeness of the data.
+
+#### Approach 2: Using SAS Viya Programming Interface
+
+1. **Check for Duplicates:**
+   - Use PROC SORT and PROC FREQ to identify duplicates.
+   ```sas
+   proc sort data=HOUSEPRICE nodupkey;
+       by _all_;
+   run;
+   ```
+
+2. **Format Consistency:**
+   - Use data step programming to standardize formats.
+   ```sas
+   data HOUSEPRICE;
+       set HOUSEPRICE;
+       format SalePrice dollar12.2;
+   run;
+   ```
+
+3. **Validation:**
+   - Use PROC FREQ and PROC MEANS to validate data consistency and completeness.
+   ```sas
+   proc freq data=HOUSEPRICE;
+       tables _all_;
+   run;
+
+   proc means data=HOUSEPRICE nmiss;
+       var _numeric_;
+   run;
+   ```
+
+### Q3. Machine Learning Model Development
+
+#### Approach 1: Using SAS Viya Visual Data Mining and Machine Learning (VDMML)
+
+1. **Select Model Type:**
+   - Choose a regression model (e.g., Linear Regression, Decision Tree) in the Model Studio.
+
+2. **Model Training:**
+   - Split the data into training and testing sets.
+   - Train the model using the training data.
+
+3. **Evaluate Performance:**
+   - Use metrics like R-squared, RMSE, and MAE to evaluate model performance.
+   - Visualize performance using residual plots and actual vs. predicted plots.
+
+#### Approach 2: Using SAS Viya Programming Interface
+
+1. **Select Model Type:**
+   - Use PROC REG or PROC GLM for Linear Regression.
+   ```sas
+   proc reg data=HOUSEPRICE;
+       model SalePrice = GrLivArea OverallQual GarageCars;
+   run;
+   ```
+
+2. **Model Training:**
+   - Split the data using PROC SURVEYSELECT.
+   ```sas
+   proc surveyselect data=HOUSEPRICE out=TrainTest samprate=0.7 outall;
+       strata OverallQual;
+   run;
+   ```
+
+3. **Evaluate Performance:**
+   - Use PROC GLMSELECT for model selection and evaluation.
+   ```sas
+   proc glmselect data=TrainTest;
+       model SalePrice = GrLivArea OverallQual GarageCars;
+       partition rolevar=_PARTIND_;
+   run;
+   ```
+
+### Q4. Model Significance
+
+#### Approach 1: Using SAS Viya Visual Data Mining and Machine Learning (VDMML)
+
+1. **Model Significance:**
+   - Assess the significance of the model using the p-values and confidence intervals provided in the model summary.
+   - Use hypothesis testing results available in the Model Studio.
+
+#### Approach 2: Using SAS Viya Programming Interface
+
+1. **Model Significance:**
+   - Assess the significance using PROC REG or PROC GLM outputs.
+   ```sas
+   proc reg data=TrainTest;
+       model SalePrice = GrLivArea OverallQual GarageCars;
+       output out=Predicted p=PredictedSalePrice;
+   run;
+   ```
+
+2. **Statistical Significance:**
+   - Check the p-values of the predictors. If they are less than 0.05, the predictors are statistically significant.
+   ```sas
+   proc glm data=TrainTest;
+       model SalePrice = GrLivArea OverallQual GarageCars;
+   run;
+   ```
+
+By following these detailed steps in SAS Viya Learner, you can comprehensively analyze, preprocess, and model the HOUSEPRICE dataset to predict the SalePrice accurately. The use of different approaches ensures a robust understanding and application of the techniques.
+
+
+Sure, here's a detailed step-by-step guide to performing the tasks in SAS Viya Learner, including how to navigate to the required options and features:
+
+### Q1. Exploratory Data Analysis (EDA)
+
+#### Approach 1: Using SAS Viya Visual Analytics
+
+1. **Load the Dataset:**
+   - Log in to SAS Viya.
+   - Navigate to "Explore and Visualize Data" on the home screen.
+   - Click "Open Data" and select the `HOUSEPRICE` dataset from your library.
+
+2. **Descriptive Statistics:**
+   - In the Visual Analytics interface, click on the "Objects" tab.
+   - Drag and drop the "Summary Statistics" object onto the canvas.
+   - Select the variables you want to analyze (e.g., `SalePrice`, `LotArea`, `GrLivArea`, etc.).
+
+3. **Data Visualization:**
+   - Drag and drop the "Histogram" object onto the canvas for visualizing continuous variables.
+   - Select the variable `SalePrice` for the histogram.
+   - Repeat for other continuous variables.
+   - Drag and drop the "Box Plot" object to visualize outliers for variables like `SalePrice`.
+   - Use the "Scatter Plot" object to visualize relationships between pairs of variables (e.g., `GrLivArea` vs. `SalePrice`).
+
+4. **Correlation Analysis:**
+   - Click on the "Objects" tab and drag the "Correlation Matrix" object to the canvas.
+   - Select the numeric variables to include in the correlation matrix.
+   - Visualize the heatmap generated to assess multicollinearity.
+
+5. **Selected Attributes:**
+   - Based on the analysis, identify variables highly correlated with `SalePrice` for prediction.
+
+#### Approach 2: Using SAS Viya Programming Interface
+
+1. **Load the Dataset:**
+   - Log in to SAS Viya.
+   - Navigate to "Develop SAS Code" on the home screen.
+   - Open a new code editor window and use the PROC IMPORT statement to load the dataset.
+
+2. **Descriptive Statistics:**
+   - In the code editor, enter the PROC MEANS code:
+   ```sas
+   proc means data=HOUSEPRICE n mean median std min max;
+       var SalePrice LotArea GrLivArea OverallQual GarageCars;
+   run;
+   ```
+
+3. **Data Visualization:**
+   - Enter the PROC SGPLOT code for histograms and scatter plots:
+   ```sas
+   proc sgplot data=HOUSEPRICE;
+       histogram SalePrice;
+   run;
+
+   proc sgplot data=HOUSEPRICE;
+       scatter x=GrLivArea y=SalePrice;
+   run;
+   ```
+
+4. **Correlation Analysis:**
+   - Enter the PROC CORR code to compute the correlation matrix:
+   ```sas
+   proc corr data=HOUSEPRICE;
+       var SalePrice LotArea GrLivArea OverallQual GarageCars;
+   run;
+   ```
+
+5. **Selected Attributes:**
+   - Analyze the PROC CORR output to identify significant variables.
+
+### Q2. Data Preprocessing
+
+#### Approach 1: Using SAS Viya Visual Data Preparation
+
+1. **Check for Duplicates:**
+   - Navigate to "Prepare Data" on the home screen.
+   - Open the `HOUSEPRICE` dataset.
+   - Use the "Find Duplicates" transformation from the toolbar to identify duplicates.
+   - Remove any identified duplicates.
+
+2. **Format Consistency:**
+   - Use the "Standardize" transformation from the toolbar to standardize formats.
+   - Use the "Impute Missing Values" transformation to handle missing data.
+
+3. **Validation:**
+   - Use the "Profile Data" feature to validate data consistency and completeness.
+
+#### Approach 2: Using SAS Viya Programming Interface
+
+1. **Check for Duplicates:**
+   - In the code editor, enter the PROC SORT code:
+   ```sas
+   proc sort data=HOUSEPRICE nodupkey;
+       by _all_;
+   run;
+   ```
+
+2. **Format Consistency:**
+   - Enter the data step programming code:
+   ```sas
+   data HOUSEPRICE;
+       set HOUSEPRICE;
+       format SalePrice dollar12.2;
+   run;
+   ```
+
+3. **Validation:**
+   - Enter the PROC FREQ and PROC MEANS code:
+   ```sas
+   proc freq data=HOUSEPRICE;
+       tables _all_;
+   run;
+
+   proc means data=HOUSEPRICE nmiss;
+       var _numeric_;
+   run;
+   ```
+
+### Q3. Machine Learning Model Development
+
+#### Approach 1: Using SAS Viya Visual Data Mining and Machine Learning (VDMML)
+
+1. **Select Model Type:**
+   - Navigate to "Build Models" on the home screen.
+   - Open Model Studio and create a new project.
+   - Select the `HOUSEPRICE` dataset.
+   - Choose a regression model type (e.g., Linear Regression, Decision Tree).
+
+2. **Model Training:**
+   - In Model Studio, add a data partitioning node to split the data into training and testing sets.
+   - Add the chosen regression model to the pipeline and configure the parameters.
+
+3. **Evaluate Performance:**
+   - Add a model assessment node to the pipeline.
+   - Evaluate the model performance using metrics like R-squared, RMSE, and MAE.
+   - Visualize performance using residual plots and actual vs. predicted plots.
+
+#### Approach 2: Using SAS Viya Programming Interface
+
+1. **Select Model Type:**
+   - In the code editor, enter the PROC REG code:
+   ```sas
+   proc reg data=HOUSEPRICE;
+       model SalePrice = GrLivArea OverallQual GarageCars;
+   run;
+   ```
+
+2. **Model Training:**
+   - Enter the PROC SURVEYSELECT code to split the data:
+   ```sas
+   proc surveyselect data=HOUSEPRICE out=TrainTest samprate=0.7 outall;
+       strata OverallQual;
+   run;
+   ```
+
+3. **Evaluate Performance:**
+   - Enter the PROC GLMSELECT code:
+   ```sas
+   proc glmselect data=TrainTest;
+       model SalePrice = GrLivArea OverallQual GarageCars;
+       partition rolevar=_PARTIND_;
+   run;
+   ```
+
+### Q4. Model Significance
+
+#### Approach 1: Using SAS Viya Visual Data Mining and Machine Learning (VDMML)
+
+1. **Model Significance:**
+   - Assess the significance of the model using the p-values and confidence intervals provided in the model summary.
+   - Use the hypothesis testing results available in Model Studio.
+
+#### Approach 2: Using SAS Viya Programming Interface
+
+1. **Model Significance:**
+   - Assess the significance using the PROC REG or PROC GLM outputs.
+   ```sas
+   proc reg data=TrainTest;
+       model SalePrice = GrLivArea OverallQual GarageCars;
+       output out=Predicted p=PredictedSalePrice;
+   run;
+   ```
+
+2. **Statistical Significance:**
+   - Check the p-values of the predictors. If they are less than 0.05, the predictors are statistically significant.
+   ```sas
+   proc glm data=TrainTest;
+       model SalePrice = GrLivArea OverallQual GarageCars;
+   run;
+   ```
+
+By following these detailed steps in SAS Viya Learner, you can comprehensively analyze, preprocess, and model the `HOUSEPRICE` dataset to predict the `SalePrice` accurately. The use of different approaches ensures a robust understanding and application of the techniques.
+
+
+
+
+
+TASK 2
+
+
+Here's a detailed step-by-step guide for addressing the tasks related to the 'FLCRASH' dataset in SAS Viya Learner. I'll provide two different approaches for each question and include guidance on how to navigate to the required options and features in SAS Viya.
+
+### Q1. Create a Machine Learning Model
+
+#### Approach 1: Using SAS Viya Visual Data Mining and Machine Learning (VDMML)
+
+1. **Load the Dataset:**
+   - Log in to SAS Viya.
+   - Navigate to "Build Models" on the home screen.
+   - Create a new project in Model Studio and select the `FLCRASH` dataset.
+
+2. **Data Preparation:**
+   - In the Model Studio, add a data preparation node to remove time and location attributes.
+   - Use the "Transform Variables" node to select relevant attributes for the model.
+
+3. **Model Selection:**
+   - Add a "Decision Tree" node to the pipeline for classification purposes.
+   - Configure the model parameters as needed.
+
+4. **Model Training:**
+   - Split the data into training and testing sets using a "Data Partition" node.
+   - Train the decision tree model using the training data.
+
+5. **Model Evaluation:**
+   - Add a "Model Comparison" node to assess model performance.
+   - Evaluate using metrics like accuracy, precision, recall, and F1-score.
+   - Visualize the performance with ROC curves and confusion matrix.
+
+6. **Observations:**
+   - Observe the decision rules generated by the tree and the performance metrics.
+   - Discuss any patterns or insights identified during the analysis.
+
+#### Approach 2: Using SAS Viya Programming Interface
+
+1. **Load the Dataset:**
+   - Log in to SAS Viya.
+   - Navigate to "Develop SAS Code" on the home screen.
+   - Open a new code editor window and use the following code to load the dataset:
+   ```sas
+   proc import datafile="/path/to/FLCRASH.csv" out=FLCRASH dbms=csv replace;
+       getnames=yes;
+   run;
+   ```
+
+2. **Data Preparation:**
+   - Use a data step to drop time and location attributes:
+   ```sas
+   data FLCRASH;
+       set FLCRASH;
+       drop time location;
+   run;
+   ```
+
+3. **Model Selection:**
+   - Use PROC DECISIONTREE for decision tree classification:
+   ```sas
+   proc hpsplit data=FLCRASH;
+       class categorical_variable;
+       model target_variable = explanatory_variables;
+       grow entropy;
+       prune costcomplexity;
+   run;
+   ```
+
+4. **Model Training:**
+   - Split the data into training and testing sets using PROC SURVEYSELECT:
+   ```sas
+   proc surveyselect data=FLCRASH out=train_test samprate=0.7 outall;
+       strata target_variable;
+   run;
+   ```
+
+5. **Model Evaluation:**
+   - Use PROC ASSESS to evaluate model performance:
+   ```sas
+   proc assess data=train_test;
+       input target_variable predicted_variable;
+       fitstat accuracy precision recall f1;
+       roc;
+   run;
+   ```
+
+6. **Observations:**
+   - Review the model assessment outputs to discuss performance and insights.
+
+### Q2. Create a New Custom Category Variable
+
+#### Approach 1: Using SAS Viya Visual Data Preparation
+
+1. **Create Custom Variable:**
+   - Navigate to "Prepare Data" on the home screen.
+   - Open the `FLCRASH` dataset.
+   - Use the "Transform Variables" feature to create a new variable based on `Total Crash Injuries`.
+   - Define the new variable with the formula: `IF Total_Crash_Injuries = 0 THEN New_Category = "Zero"; ELSE New_Category = "One or More";`
+
+2. **Visualize Frequency:**
+   - Go to "Explore and Visualize Data" and open the `FLCRASH` dataset with the new category variable.
+   - Drag and drop the "Bar Chart" object onto the canvas.
+   - Select `New_Category` for the bar chart and visualize the frequency.
+
+3. **Count Zero Injuries:**
+   - Use the "Summary Statistics" object to count the number of crashes with zero injuries.
+
+#### Approach 2: Using SAS Viya Programming Interface
+
+1. **Create Custom Variable:**
+   - In the code editor, use a data step to create the new variable:
+   ```sas
+   data FLCRASH;
+       set FLCRASH;
+       if Total_Crash_Injuries = 0 then New_Category = "Zero";
+       else New_Category = "One or More";
+   run;
+   ```
+
+2. **Visualize Frequency:**
+   - Use PROC SGPLOT to create a bar chart:
+   ```sas
+   proc sgplot data=FLCRASH;
+       vbar New_Category;
+   run;
+   ```
+
+3. **Count Zero Injuries:**
+   - Use PROC FREQ to count zero injuries:
+   ```sas
+   proc freq data=FLCRASH;
+       tables New_Category;
+   run;
+   ```
+
+### Q3. Develop Two Models to Predict the Target Variable
+
+#### Approach 1: Using SAS Viya Visual Data Mining and Machine Learning (VDMML)
+
+1. **Model 1 - Logistic Regression:**
+   - In Model Studio, add a "Logistic Regression" node to the pipeline.
+   - Configure the logistic regression parameters.
+   - Train the model using the training data.
+
+2. **Model 2 - Random Forest:**
+   - Add a "Random Forest" node to the pipeline.
+   - Configure the random forest parameters.
+   - Train the model using the training data.
+
+3. **Model Evaluation:**
+   - Add a "Model Comparison" node to compare both models.
+   - Evaluate using metrics like accuracy, precision, recall, and F1-score.
+   - Visualize performance with ROC curves and confusion matrix.
+
+4. **Variable Importance:**
+   - Review the variable importance charts provided by each model.
+   - Identify the most important variables for predicting the target variable.
+
+5. **Comparison and Champion Model:**
+   - Compare the performance metrics of both models.
+   - Discuss the results and determine the champion model based on performance.
+
+#### Approach 2: Using SAS Viya Programming Interface
+
+1. **Model 1 - Logistic Regression:**
+   - Use PROC LOGISTIC to build the logistic regression model:
+   ```sas
+   proc logistic data=FLCRASH;
+       class categorical_variables;
+       model New_Category(event='One or More') = explanatory_variables;
+       output out=predicted p=prob;
+   run;
+   ```
+
+2. **Model 2 - Random Forest:**
+   - Use PROC HPFOREST to build the random forest model:
+   ```sas
+   proc hpforest data=FLCRASH;
+       class categorical_variables;
+       target New_Category / level=nominal;
+       input explanatory_variables;
+   run;
+   ```
+
+3. **Model Evaluation:**
+   - Use PROC ASSESS to evaluate both models:
+   ```sas
+   proc assess data=predicted;
+       input New_Category predicted_probability;
+       fitstat accuracy precision recall f1;
+       roc;
+   run;
+   ```
+
+4. **Variable Importance:**
+   - Review the outputs of PROC LOGISTIC and PROC HPFOREST to identify important variables.
+
+5. **Comparison and Champion Model:**
+   - Compare the performance metrics of both models.
+   - Discuss the results and determine the champion model based on performance.
+
+By following these detailed steps in SAS Viya Learner, you can build, evaluate, and compare machine learning models for the `FLCRASH` dataset. The use of different approaches ensures a robust understanding and application of the techniques.
+
+
+
+
+
+
+
+TASK 3
+
+
+
+
+
+Here's a detailed step-by-step guide for addressing the tasks related to the 'CONSUMER_AIRFARE_REPORT_96_20' dataset in SAS Viya Learner. I'll provide two different approaches for each question and include guidance on how to navigate to the required options and features in SAS Viya.
+
+### Q1. Construct New Categorical Variables Using 'Year' and 'Quarter'
+
+#### Approach 1: Using SAS Viya Visual Data Preparation
+
+1. **Load the Dataset:**
+   - Log in to SAS Viya.
+   - Navigate to "Prepare Data" on the home screen.
+   - Open the `CONSUMER_AIRFARE_REPORT_96_20` dataset.
+
+2. **Create Date Variable:**
+   - In the data preparation interface, select the dataset.
+   - Click on the "Transform" tab.
+   - Use the "DateFromYQ" function to create a new variable representing dates.
+   - Define the new variable as:
+     ```sas
+     Date = DateFromYQ(Year, Quarter);
+     ```
+   - Save the transformation.
+
+3. **Visualize the New Variable:**
+   - Navigate to "Explore and Visualize Data."
+   - Open the transformed dataset.
+   - Drag and drop the "Table" object onto the canvas.
+   - Display the new date variable along with the original Year and Quarter variables to verify correctness.
+
+#### Approach 2: Using SAS Viya Programming Interface
+
+1. **Load the Dataset:**
+   - Log in to SAS Viya.
+   - Navigate to "Develop SAS Code" on the home screen.
+   - Open a new code editor window and use the following code to load the dataset:
+   ```sas
+   proc import datafile="/path/to/CONSUMER_AIRFARE_REPORT_96_20.csv" out=CONSUMER_AIRFARE_REPORT_96_20 dbms=csv replace;
+       getnames=yes;
+   run;
+   ```
+
+2. **Create Date Variable:**
+   - Use a data step to create the new date variable:
+   ```sas
+   data CONSUMER_AIRFARE_REPORT_96_20;
+       set CONSUMER_AIRFARE_REPORT_96_20;
+       Date = intnx('quarter', '01JAN1996'd, (Year - 1996) * 4 + (Quarter - 1));
+       format Date yymon7.;
+   run;
+   ```
+
+3. **Visualize the New Variable:**
+   - Use PROC PRINT to display the new date variable along with the original Year and Quarter variables:
+   ```sas
+   proc print data=CONSUMER_AIRFARE_REPORT_96_20 (obs=10);
+       var Year Quarter Date;
+   run;
+   ```
+
+### Q2. Transform 'Passengers' Category to Measure Variable
+
+#### Approach 1: Using SAS Viya Visual Data Preparation
+
+1. **Transform Passengers Variable:**
+   - In the data preparation interface, select the dataset.
+   - Click on the "Transform" tab.
+   - Convert the `Passengers` variable from a category to a measure variable.
+   - Use the "Numeric Conversion" transformation to ensure the result is an integer.
+
+2. **Visualize the Transformed Variable:**
+   - Navigate to "Explore and Visualize Data."
+   - Open the transformed dataset.
+   - Drag and drop the "Histogram" object onto the canvas.
+   - Select the `Passengers` variable to visualize its distribution.
+
+#### Approach 2: Using SAS Viya Programming Interface
+
+1. **Transform Passengers Variable:**
+   - In the code editor, use a data step to convert the `Passengers` variable:
+   ```sas
+   data CONSUMER_AIRFARE_REPORT_96_20;
+       set CONSUMER_AIRFARE_REPORT_96_20;
+       Passengers = int(Passengers);
+   run;
+   ```
+
+2. **Visualize the Transformed Variable:**
+   - Use PROC SGPLOT to create a histogram of the `Passengers` variable:
+   ```sas
+   proc sgplot data=CONSUMER_AIRFARE_REPORT_96_20;
+       histogram Passengers;
+   run;
+   ```
+
+### Q3. Develop a Forecast Model
+
+#### Approach 1: Using SAS Viya Visual Forecasting
+
+1. **Load the Dataset:**
+   - Log in to SAS Viya.
+   - Navigate to "Build Models" on the home screen.
+   - Create a new project in Model Studio and select the `CONSUMER_AIRFARE_REPORT_96_20` dataset.
+
+2. **Data Preparation:**
+   - In Model Studio, add a data preparation node to filter data from Q1 1998 to Q1 2018.
+   - Use the "Filter Rows" transformation to select the required date range.
+
+3. **Model Selection:**
+   - Add a "Time Series Forecasting" node to the pipeline.
+   - Configure the model to include the `Passengers` variable as a predictor.
+   - Set the forecast horizon to 18 months and the confidence interval to 95%.
+
+4. **Model Training:**
+   - Train the forecasting model using the training data.
+
+5. **Model Evaluation:**
+   - Add a "Model Comparison" node to assess model performance.
+   - Evaluate using metrics like MAPE (Mean Absolute Percentage Error) and RMSE (Root Mean Square Error).
+   - Visualize the forecasted values with confidence intervals.
+
+6. **Analysis:**
+   - Analyze the forecasted airfare prices and discuss the results.
+   - Compare forecasted prices with actual prices if available.
+
+#### Approach 2: Using SAS Viya Programming Interface
+
+1. **Load the Dataset:**
+   - In the code editor, use the following code to load and filter the dataset:
+   ```sas
+   proc import datafile="/path/to/CONSUMER_AIRFARE_REPORT_96_20.csv" out=CONSUMER_AIRFARE_REPORT_96_20 dbms=csv replace;
+       getnames=yes;
+   run;
+
+   data train;
+       set CONSUMER_AIRFARE_REPORT_96_20;
+       if '01JAN1998'd <= Date <= '01JAN2018'd;
+   run;
+   ```
+
+2. **Model Selection:**
+   - Use PROC ESM to develop a forecast model:
+   ```sas
+   proc esm data=train outfor=forecast lead=6 plot=all;
+       id Date interval=quarter;
+       forecast fare / model=WINTERS;
+       run;
+   ```
+
+3. **Model Evaluation:**
+   - Use PROC ARIMA to evaluate the model:
+   ```sas
+   proc arima data=train;
+       identify var=fare(1, 12);
+       estimate p=1 q=1;
+       forecast lead=6 interval=quarter id=Date out=outfor;
+   run;
+   ```
+
+4. **Analysis:**
+   - Use PROC SGPLOT to visualize the forecasted values:
+   ```sas
+   proc sgplot data=forecast;
+       series x=Date y=Forecast;
+       band x=Date upper=UCL lower=LCL;
+   run;
+   ```
+
+### Q4. Evaluate the Feasibility of Regression Analysis
+
+#### Approach 1: Using SAS Viya Visual Data Mining and Machine Learning (VDMML)
+
+1. **Regression Model:**
+   - In Model Studio, add a "Regression" node to the pipeline.
+   - Configure the regression model to include the `Passengers` variable and other relevant variables.
+   - Train the regression model using the training data.
+
+2. **Model Evaluation:**
+   - Add a "Model Comparison" node to assess the regression model's performance.
+   - Evaluate using metrics like R-squared, RMSE, and MAE.
+
+3. **Feasibility Analysis:**
+   - Compare the performance of the regression model with the forecasting model.
+   - Discuss the pros and cons of using regression analysis for airfare prediction.
+
+#### Approach 2: Using SAS Viya Programming Interface
+
+1. **Regression Model:**
+   - Use PROC REG to develop a regression model:
+   ```sas
+   proc reg data=train;
+       model fare = Passengers nsmiles large_ms fare_lg lf_ms fare_low;
+   run;
+   ```
+
+2. **Model Evaluation:**
+   - Use PROC GLMSELECT to evaluate the regression model:
+   ```sas
+   proc glmselect data=train;
+       model fare = Passengers nsmiles large_ms fare_lg lf_ms fare_low / selection=stepwise;
+   run;
+   ```
+
+3. **Feasibility Analysis:**
+   - Compare the performance metrics of the regression model with the forecasting model.
+   - Discuss the applicability of regression analysis for predicting airfares and its limitations.
+
+By following these detailed steps in SAS Viya Learner, you can effectively construct new variables, transform data, develop and evaluate models, and analyze the feasibility of different predictive techniques for the `CONSUMER_AIRFARE_REPORT_96_20` dataset.
+
